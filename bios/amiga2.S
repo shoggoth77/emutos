@@ -21,7 +21,9 @@
         .extern _kbdvecs
         .extern _longframe
         .extern _scancode_atari_from_amiga
-
+        .extern _amiga_mouse_poll
+        .extern _amiga_joystick_poll
+        
 /******************************************************************************/
 /* Startup                                                                    */
 /******************************************************************************/
@@ -239,6 +241,9 @@ _amiga_int_6:
         lsr.w   #2,d0
         jbcc    amiga_int_6_end         // bit 1 not set means no Timer B interrupt
 
+        jbsr    _amiga_mouse_poll
+        jbsr    _amiga_joystick_poll
+
         jsr     _amiga_int_ciab_timer_b
   
         move.w  #0x2000,0xdff09c        // INTREQ = interrupt processed.
@@ -296,9 +301,6 @@ setcopper:
         move.w  d0,6(a0)                // BPL1PTH
 
         jbsr    _int_vbl                // Call the standard VBL handler
-
-        .extern _amiga_extra_vbl
-        jbsr    _amiga_extra_vbl        // Call extra VBL handler
 
         move.w  #0x0020,0xdff09c        // INTREQ: Clear VBL interrupt
         move.w  #0x0020,0xdff09c        // Twice for compatibility

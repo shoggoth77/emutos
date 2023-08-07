@@ -66,7 +66,8 @@ WORD amiga_setcolor(WORD colorNum, WORD color);
 void amiga_setrez(WORD rez, WORD videlmode);
 void amiga_kbd_init(void);
 void amiga_ikbd_writeb(UBYTE b);
-void amiga_extra_vbl(void);
+void amiga_joystick_poll(void);
+void amiga_mouse_poll(void);
 void amiga_clock_init(void);
 ULONG amiga_getdt(void);
 

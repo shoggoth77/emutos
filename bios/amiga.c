@@ -936,7 +936,7 @@ static BOOL oldButton1;
 static BOOL oldButton2;
 static BOOL oldMouseSet;
 
-static void amiga_mouse_vbl(void)
+void amiga_mouse_poll(void)
 {
     UWORD data;
     UBYTE mouseX, mouseY;
@@ -1032,7 +1032,7 @@ static UBYTE amiga_read_joystick(int joynum)
 static UBYTE oldJoy1;
 static UBYTE oldJoy0;
 
-static void amiga_joystick_vbl(void)
+void amiga_joystick_poll(void)
 {
     UBYTE joy1, joy0;
     UBYTE packet[3];
@@ -1064,16 +1064,6 @@ static void amiga_joystick_vbl(void)
             oldJoy0 = joy0;
         }
     }
-}
-
-/******************************************************************************/
-/* Extra VBL                                                                  */
-/******************************************************************************/
-
-void amiga_extra_vbl(void)
-{
-    amiga_mouse_vbl();
-    amiga_joystick_vbl();
 }
 
 /******************************************************************************/
