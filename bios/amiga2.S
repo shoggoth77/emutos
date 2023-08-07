@@ -48,6 +48,27 @@ delay:  subq.l  #1,D0                   // Delay loop.
         move.w  d0,0x96(a0)             // Disable all DMA.
         bclr.b  #7,0xdaa000             // Disable Gayle interrupts (IDE)
 
+        // Clear CIAA and CIAB
+        move.b  #0,0xbfee01             // CIAA control register A
+        move.b  #0,0xbfef01             // CIAA control register B
+        move.b  #0,0xbfde00             // CIAB control register A
+        move.b  #0,0xbfdf00             // CIAB control register B 
+
+        // clear CIA interrupts (ICR)
+        move.b  #0b01111111,0xbfed01    // CIAA
+        move.b  #0b01111111,0xbfdd00    // CIAB
+
+        // clear prescalers
+        move.b  #0x00,0xbfe401 // CIAA
+        move.b  #0x00,0xbfe501
+        move.b  #0x00,0xbfe601
+        move.b  #0x00,0xbfe701
+
+        move.b  #0x00,0xbfd400 // CIAB
+        move.b  #0x00,0xbfd500
+        move.b  #0x00,0xbfd600
+        move.b  #0x0d,0xbfd700
+
         jmp     (a6)                    // Return
 
 /******************************************************************************/
@@ -105,24 +126,10 @@ _amiga_init_keyboard_interrupt:
         move.l  #_amiga_int_2,0x68.w
         move.l  #_amiga_int_6,0x78.w
 
-        // Disable CIAA
-        move.b  #0,0xbfee01             // CIAA control register A (serial)
-        move.b  #0,0xbfdf00             // CIAB control register B (Timer 200 Hz)
-
-        // CIAB Timer B: 200 Hz system timer, value = 3547
-        move.b  #0x0d,0xbfd700
-        move.b  #0xdb,0xbfd600
-
-        // CIAB control register
-        move.b  #0b00000001,0xbfdf00    // CIAB control register B (Timer 200 Hz)
-
-        // CIAA interrupt control register
-        move.b  #0b01111111,0xbfed01    // CIAA interrupt control register: Clear all 8520 interrupts
-        move.b  #0b10001000,0xbfed01    // Enable serial port interrupt
-
-        // CIAB interrupt control register
-        move.b  #0b01111111,0xbfdd00    // CIAB interrupt control register: Clear all 8520 interrupts
-        move.b  #0b10000010,0xbfdd00    // Enable Timer B
+        move.w  #0x89,0xbfed01          // CIAA Enable keyboard and Timer A IRQ
+   
+        move.b  #0b00000001,0xbfdf00    // CIAB Start Timer B (200Hz timer)
+        move.b  #0b10000010,0xbfdd00    // CIAB Enable Timer B IRQ
 
         move.w  #0xe008,0xdff09a        // INTENA INTEN + CIAA + CIAB
         rts
@@ -131,63 +138,30 @@ _amiga_init_keyboard_interrupt:
 
         .globl  _amiga_int_2
 _amiga_int_2:
-        //move.w  #0x0f00,0xdff180        // Background color = red
-        move    #0x2700,sr              // Original interrupt mask will be restored by RTE
-        movem.l d0-d2/a0-a1,-(sp)
+        movem.l d0-d1/a0-a1,-(sp)
+        move.w #0x2700,sr
 
-        move.w  0xdff01e,d0             // intreq
-        btst    #3,d0                   // interrupt CIA ?
-        jeq     amiga_int_2_end
+        move.w  0xdff01e,d0             // INTREQR
+        btst    #3,d0                   // PORTS interrupt?
+        jbeq    int2_end
 
-        move.b  0xbfed01,d2             // CIA A ? interrupt control register (DATA)
-        jpl     amiga_ciaa_end
+        lea     0xbfee01,a0
+        move.b  -0x100(a0),d0           // CIAA?
+        jbpl    int2_end                // bit 7 not set; no CIA interrupt
 
-        jbsr    amiga_int_ciaa
+ciaa_ta:lsr.w   #1,d0
+        jbcc    ciaa_sp                 // bit 0 not set means no Timer A interrupt
 
-amiga_ciaa_end:
-        move.w  #0x0008,0xdff09c        // Intreq = interrupt processed.
-        move.w  #0x0008,0xdff09c        // twice for compatibility
+        clr.b   (a0)                    // SPMODE = 0, end keyboard acknowledge
 
-amiga_int_2_end:
-        movem.l (sp)+,d0-d2/a0-a1
-        rte
+ciaa_sp:lsr.w   #3,d0
+        jbcc    int2_end                // bit 3 not set means no serial interrupt
 
-/* CIA A interrupt */
+        move.b  -0x200(a0),d0           // read character
+        move.b  #0x59,(a0)              // start ack (SPMODE out) and Timer A (one shot)
 
-amiga_int_ciaa:
-        btst    #3,d2
-        jeq     amiga_int_ciaa_end
-
-        jbsr    _amiga_int_ciaa_serial
-
-amiga_int_ciaa_end:
-        rts
-
-/* CIA A Serial interrupt (from keyboard) */
-
-_amiga_int_ciaa_serial:
-        moveq   #0,d0
-        move.b  0xbfec01,d0             // Keypress + acknowledge
         not.b   d0
-        ror.b   #1,d0                   // d0 now contains the raw key
-
-        // Begin acknowledge on CNT pin
-        // and start the CIAA Timer A in one shot mode
-        move.b  #0b01001000,0xbfee01    // CIAA control register A (Timer A) + SPMODE = 1
-
-        // The timer will start after writing the high byte
-        // CIAA Timer A: keyboard acknowledge timer, value = 63 (85 ms)
-        move.b  #0x3d,0xbfe401          // Low byte
-        move.b  #0x00,0xbfe501          // High byte
-
-        // Wait for timer expired
-wait_kbd_ack:
-        btst.b  #0,0xbfed01             // Wait for CIAA A Timer A interrupt flag
-        jeq     wait_kbd_ack
-
-        // End acknowledge on CNT pin
-        andi.b  #~0b01000000,0xbfee01   // SPMODE = 0
-
+        ror.b   #1,d0
         move.b  d0,d1
         andi.b  #0x80,d0
         andi.w  #0x007f,d1
@@ -196,7 +170,13 @@ wait_kbd_ack:
 
         move.l  _kbdvecs-4,a0           // kbdvec
         jsr     (a0)
-        rts
+
+        move.w  #0x0008,0xdff09c        // Ack PORTS
+        move.w  #0x0008,0xdff09c        // 2CCK delay (propagate IPL from Paula to CPU)
+
+int2_end:
+        movem.l (sp)+,d0-d1/a0-a1
+        rte
 
 /******************************************************************************/
 /* Interrupt 5: RS-232 interrupt                                              */
