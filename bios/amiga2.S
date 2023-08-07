@@ -95,29 +95,34 @@ exitcheck:
         jmp     (a6)                    // Return
 
 /******************************************************************************/
-/* Interrupt 2: Keyboard and 200 Hz timer                                     */
+/* Interrupt 2: Keyboard                                                      */
 /******************************************************************************/
 
         .globl  _amiga_init_keyboard_interrupt
 _amiga_init_keyboard_interrupt:
         move.l  #_amiga_int_2,0x68.w
+        move.l  #_amiga_int_6,0x78.w
 
         // Disable CIAA
         move.b  #0,0xbfee01             // CIAA control register A (serial)
-        move.b  #0,0xbfef01             // CIAA control register B (Timer 200 Hz)
+        move.b  #0,0xbfdf00             // CIAB control register B (Timer 200 Hz)
 
-        // CIAA Timer B: 200 Hz system timer, value = 3547
-        move.b  #0x0d,0xbfe701
-        move.b  #0xdb,0xbfe601
+        // CIAB Timer B: 200 Hz system timer, value = 3547
+        move.b  #0x0d,0xbfd700
+        move.b  #0xdb,0xbfd600
 
-        // CIAA control register
-        move.b  #0b00000001,0xbfef01    // CIAA control register B (Timer 200 Hz)
+        // CIAB control register
+        move.b  #0b00000001,0xbfdf00    // CIAB control register B (Timer 200 Hz)
 
         // CIAA interrupt control register
         move.b  #0b01111111,0xbfed01    // CIAA interrupt control register: Clear all 8520 interrupts
-        move.b  #0b10001010,0xbfed01    // Enable serial port interrupt + Timer B
-        move.w  #0xc008,0xdff09a        // INTENA CIAA
+        move.b  #0b10001000,0xbfed01    // Enable serial port interrupt
 
+        // CIAB interrupt control register
+        move.b  #0b01111111,0xbfdd00    // CIAB interrupt control register: Clear all 8520 interrupts
+        move.b  #0b10000010,0xbfdd00    // Enable Timer B
+
+        move.w  #0xe008,0xdff09a        // INTENA INTEN + CIAA + CIAB
         rts
 
 /* Interrupt 2 handler */
@@ -149,15 +154,9 @@ amiga_int_2_end:
 
 amiga_int_ciaa:
         btst    #3,d2
-        jeq     tst_ciaa_timerb
-
-        jbsr    _amiga_int_ciaa_serial
-
-tst_ciaa_timerb:
-        btst    #1,d2
         jeq     amiga_int_ciaa_end
 
-        jbsr    _amiga_int_ciaa_timer_b
+        jbsr    _amiga_int_ciaa_serial
 
 amiga_int_ciaa_end:
         rts
@@ -197,24 +196,6 @@ wait_kbd_ack:
         jsr     (a0)
         rts
 
-/* CIA A Timer B interrupt (for 200 Hz system timer) */
-
-_amiga_int_ciaa_timer_b:
-// Call vector_5ms. The return address is already on the stack.
-// As it will return with RTE, we must setup a proper stack frame
-        tst.w   _longframe              // CPU > 68000, long stack frame?
-        jeq     nolong
-
-        subq.l  #2,sp                   // Make room for additional word
-        move.l  2(sp),(sp)              // Move return address
-        clr.w   4(sp)                   // Format/Vector word
-nolong:
-        move.w  sr,-(sp)                // Push SR
-
-        .extern _vector_5ms
-        move.l  _vector_5ms,a0
-        jmp     (a0)                    // Call the 200 Hz system timer
-
 /******************************************************************************/
 /* Interrupt 5: RS-232 interrupt                                              */
 /******************************************************************************/
@@ -237,6 +218,53 @@ _amiga_int_5:
 amiga_int_5_end:
         movem.l (sp)+,d0-d1/a0-a1
         rte
+
+/******************************************************************************/
+/* Interrupt 6: 200 Hz timer                                                  */
+/******************************************************************************/
+
+/* Interrupt 6 handler */
+
+        .globl  _amiga_int_6
+_amiga_int_6:
+        movem.l d0-d1/a0-a1,-(sp)
+
+        move.w  0xdff01e,d0             // INTREQR
+        btst    #13,d0                  // EXTER interrupt?
+        jeq     amiga_int_6_end
+
+        move.b  0xbfdd00,d0             // CIAB?
+        jbpl    amiga_int_6_end
+
+        lsr.w   #2,d0
+        jbcc    amiga_int_6_end         // bit 1 not set means no Timer B interrupt
+
+        jsr     _amiga_int_ciab_timer_b
+  
+        move.w  #0x2000,0xdff09c        // INTREQ = interrupt processed.
+        move.w  #0x2000,0xdff09c        // twice for compatibility
+
+amiga_int_6_end:
+        movem.l (sp)+,d0-d1/a0-a1
+        rte
+
+/* CIA A Timer B interrupt (for 200 Hz system timer) */
+
+_amiga_int_ciab_timer_b:
+// Call vector_5ms. The return address is already on the stack.
+// As it will return with RTE, we must setup a proper stack frame
+        tst.w   _longframe              // CPU > 68000, long stack frame?
+        jeq     nolong
+
+        subq.l  #2,sp                   // Make room for additional word
+        move.l  2(sp),(sp)              // Move return address
+        clr.w   4(sp)                   // Format/Vector word
+nolong:
+        move.w  sr,-(sp)                // Push SR
+
+        .extern _vector_5ms
+        move.l  _vector_5ms,a0
+        jmp     (a0)                    // Call the 200 Hz system timer
 
 /******************************************************************************/
 /* VBL interrupt                                                              */
