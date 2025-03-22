@@ -358,6 +358,14 @@ _realmain:
 amiga_startup_ret:
 #endif
 
+#ifdef MACHINE_V4SA
+        // The V4SA has some Atari-compatible hardware, but
+        // it has to be initialised as soon as possible.
+        lea     v4sa_startup_ret,a6
+        jmp     v4sa_startup
+v4sa_startup_ret:
+#endif
+
 #if (!EMUTOS_LIVES_IN_RAM) && (CONF_WITH_ST_MMU)
         // Some ST MMUs power up with an invalid memory bank configuration,
         // inhibiting any RAM access. However, EmuTOS needs at least a
@@ -406,8 +414,9 @@ valid_st_mmu_config:
 
 // Note: LisaEm doesn't properly implement movec/pmove illegal instructions,
 // so we just avoid them on MACHINE_LISA.
+// The V4SA environment needs the VBR moved away, so avoid clearing it here.
 
-#if !defined(__mcoldfire__) && !defined(MACHINE_LISA)
+#if !defined(__mcoldfire__) && !defined(MACHINE_LISA) && !defined(MACHINE_V4SA)
         // first, reset the VBR
         // it may have been modified before emutos-ram or soft reset
         move.l  #vbr_ok,16     // must be 68000 if we get illegal instrn error

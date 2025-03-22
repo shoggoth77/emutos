@@ -131,14 +131,14 @@ struct IDE
 #endif /* MACHINE_M548X */
 
 /* the data register is naturally byteswapped on some hardware */
-#if defined(MACHINE_AMIGA)
+#if defined(MACHINE_AMIGA) || defined(MACHINE_V4SA)
 #define IDE_DATA_REGISTER_IS_BYTESWAPPED TRUE
 #else
 #define IDE_DATA_REGISTER_IS_BYTESWAPPED FALSE
 #endif
 
 /* set the following to 1 to use 32-bit data transfer */
-#if CONF_ATARI_HARDWARE
+#if CONF_ATARI_HARDWARE && !defined(MACHINE_V4SA)
 #define IDE_32BIT_XFER TRUE
 #else
 #define IDE_32BIT_XFER FALSE
@@ -156,7 +156,37 @@ struct IDE
 #define ide_put_and_incr(src,dst) asm volatile("move.w (%0)+,(%1)" : "=a"(src): "a"(dst), "0"(src));
 #endif
 
-#if CONF_ATARI_HARDWARE
+#if defined (MACHINE_V4SA)
+
+#define NUM_IDE_INTERFACES  1
+
+struct IDE
+{
+    UBYTE filler00[4];
+    UBYTE features; /* Read: error */
+    UBYTE filler06[3];
+    UBYTE sector_count;
+    UBYTE filler0a[3];
+    UBYTE sector_number;
+    UBYTE filler0e[3];
+    UBYTE cylinder_low;
+    UBYTE filler12[3];
+    UBYTE cylinder_high;
+    UBYTE filler16[3];
+    UBYTE head;
+    UBYTE filler1a[3];
+    UBYTE command; /* Read: status */
+    UBYTE filler1e[4091];
+    UBYTE control; /* Read: Alternate status */
+    UBYTE filler1019[3];
+    UBYTE address; /* Write: Not used */
+    UBYTE filler02[4067];
+    UWORD data;
+};
+
+#define ide_interface ((volatile struct IDE*)0x00da0000)
+
+#elif CONF_ATARI_HARDWARE
 
 #ifdef MACHINE_FIREBEE
 #define NUM_IDE_INTERFACES  2
@@ -307,7 +337,7 @@ struct IDENTIFY {
 
 /* timing stuff */
 
-#ifdef MACHINE_AMIGA
+#if defined(MACHINE_AMIGA) || defined(MACHINE_V4SA)
 /* Amiga already provides proper delay at bus level, no need for more */
 #define DELAY_400NS     NULL_FUNCTION()
 #else
@@ -952,7 +982,7 @@ static LONG ide_nodata(UBYTE cmd,UWORD ifnum,UWORD dev,ULONG sector,UWORD count)
     return E_OK;
 }
 
-#if CONF_WITH_APOLLO_68080
+#if CONF_WITH_APOLLO_68080 || defined(MACHINE_V4SA)
 /* Apollo IDE data register can be read (but not written) using 32-bit access */
 static void ide_get_data_32(volatile struct IDE *interface,UBYTE *buffer,ULONG bufferlen,int need_byteswap)
 {
@@ -997,8 +1027,10 @@ static void ide_get_data(volatile struct IDE *interface,UBYTE *buffer,ULONG buff
     UWORD *end2 = (UWORD *)(buffer + bufferlen);
 
     KDEBUG(("ide_get_data(%p, %p, %lu, %d)\n", interface, buffer, bufferlen, need_byteswap));
-
-#if CONF_WITH_APOLLO_68080
+#if defined(MACHINE_V4SA)
+    ide_get_data_32(interface, buffer, bufferlen, need_byteswap);
+    return;
+#elif CONF_WITH_APOLLO_68080
     if (is_apollo_68080)
     {
         ide_get_data_32(interface, buffer, bufferlen, need_byteswap);

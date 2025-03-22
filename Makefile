@@ -52,6 +52,7 @@ help:
 	@echo "512     etos512$(UNIQUE).img, EmuTOS ROM padded to size 512 KB"
 	@echo "1024    etos1024$(UNIQUE).img, EmuTOS ROM padded to size 1024 KB"
 	@echo "aranym  $(ROM_ARANYM), optimized for ARAnyM"
+	@echo "v4saa   $(ROM_V4SA), optimized for Apollo V4SA with Atari-compatible firmware"
 	@echo "firebee $(SREC_FIREBEE), to be flashed on the FireBee"
 	@echo "firebee-prg emutos.prg, a RAM tos for the FireBee"
 	@echo "amiga   $(ROM_AMIGA), EmuTOS ROM for Amiga hardware"
@@ -305,6 +306,7 @@ bios_src +=  memory.S processor.S vectors.S aciavecs.S bios.c xbios.c acsi.c \
              pmmu030.c 68040_pmmu.S \
              amiga.c amiga2.S spi_vamp.c \
              lisa.c lisa2.S \
+             v4sa.c v4sa2.S \
              delay.c delayasm.S sd.c memory2.c bootparams.c scsi.c nova.c \
              dsp.c dsp2.S \
              scsidriv.c
@@ -609,6 +611,25 @@ aranym: ROM_PADDED = $(ROM_ARANYM)
 aranym:
 	@echo "# Building ARAnyM EmuTOS into $(ROM_PADDED)"
 	$(MAKE) CPUFLAGS='$(CPUFLAGS)' OPTFLAGS='$(OPTFLAGS)' DEF='$(DEF)' ROMSIZE=$(ROMSIZE) ROM_PADDED=$(ROM_PADDED) $(ROM_PADDED) REF_OS=TOS404
+	@printf "$(LOCALCONFINFO)"
+
+#
+# V4SA Image
+#-DSTATIC_ALT_RAM_ADDRESS=0x01000000 -DSTATIC_ALT_RAM_SIZE=256UL*1024*1024
+
+ROM_V4SA = emutos-v4saa.img
+
+.PHONY: v4saa
+NODEP += v4saa
+v4saa: UNIQUE = $(COUNTRY)
+v4saa: OPTFLAGS = $(SMALL_OPTFLAGS)
+v4saa: override DEF += -DMACHINE_V4SA -DSTATIC_ALT_RAM_ADDRESS=0x01000000 -DSTATIC_ALT_RAM_SIZE=256UL*1024*1024
+v4saa: CPUFLAGS = -m68040
+v4saa: ROMSIZE = 512
+v4saa: ROM_PADDED = $(ROM_V4SA)
+v4saa:
+	@echo "# Building V4SA EmuTOS into $(ROM_PADDED)"
+	$(MAKE) CPUFLAGS='$(CPUFLAGS)' OPTFLAGS='$(OPTFLAGS)' DEF='$(DEF)' ROMSIZE=$(ROMSIZE) ROM_PADDED=$(ROM_PADDED) $(ROM_PADDED) REF_OS=TOS206
 	@printf "$(LOCALCONFINFO)"
 
 #

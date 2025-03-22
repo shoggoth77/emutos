@@ -62,6 +62,7 @@
 #include "amiga.h"
 #include "lisa.h"
 #include "coldfire.h"
+#include "v4sa.h"
 #if WITH_CLI
 #include "../cli/clistub.h"
 #endif
@@ -251,6 +252,10 @@ static void bios_init(void)
     /* Initialize the BIOS memory management */
     KDEBUG(("bmem_init()\n"));
     bmem_init();
+
+#if defined(MACHINE_V4SA)
+    v4sa_machine_init();
+#endif
 
 #if defined(MACHINE_AMIGA)
     /* Detect and initialize Zorro II/III expansion boards.

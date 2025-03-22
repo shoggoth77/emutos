@@ -122,6 +122,165 @@
 #endif
 
 /*
+ * Defaults for the Vampire V4SA target
+ */
+#ifdef MACHINE_V4SA
+# ifndef CONF_WITH_FDC
+#  define CONF_WITH_FDC 0
+# endif
+# ifndef CONF_WITH_ALT_RAM
+#  define CONF_WITH_ALT_RAM 1
+# endif
+# ifndef CONF_WITH_ST_MMU
+#  define CONF_WITH_ST_MMU 0
+# endif
+# ifndef CONF_WITH_TT_MMU
+#  define CONF_WITH_TT_MMU 0
+# endif
+# ifndef CONF_WITH_DIP_SWITCHES
+#  define CONF_WITH_DIP_SWITCHES 0
+# endif
+# ifndef CONF_WITH_VDI_TEXT_SPEEDUP
+#  define CONF_WITH_VDI_TEXT_SPEEDUP 0
+# endif
+# ifndef CONF_WITH_VDI_VERTLINE
+#  define CONF_WITH_VDI_VERTLINE 0
+# endif
+# ifndef CONF_WITH_FALCON_MMU
+#  define CONF_WITH_FALCON_MMU 0
+# endif
+# ifndef CONF_WITH_VIDEL
+#  define CONF_WITH_VIDEL 0
+# endif
+# ifndef CONF_WITH_DSP
+#  define CONF_WITH_DSP 0
+# endif
+# ifndef CONF_WITH_ALT_DESKTOP_GRAPHICS
+#  define CONF_WITH_ALT_DESKTOP_GRAPHICS 0
+# endif
+# ifndef CONF_WITH_3D_OBJECTS
+#  define CONF_WITH_3D_OBJECTS 1
+# endif
+# ifndef CONF_WITH_COLOUR_ICONS
+#  define CONF_WITH_COLOUR_ICONS 1
+# endif
+# ifndef CONF_WITH_MENU_EXTENSION
+#  define CONF_WITH_MENU_EXTENSION 0
+# endif
+# ifndef MAX_VERTICES
+#  define MAX_VERTICES 512
+# endif
+# ifndef CONF_STRAM_SIZE
+#  define CONF_STRAM_SIZE 8UL*1024*1024
+# endif
+# ifndef TOS_VERSION
+#  define TOS_VERSION 0x206
+# endif
+# ifndef DETECT_NATIVE_FEATURES
+#  define DETECT_NATIVE_FEATURES 0
+# endif
+# ifndef CONF_WITH_ADVANCED_CPU
+#  define CONF_WITH_ADVANCED_CPU 1
+# endif
+# ifndef CONF_WITH_VDI_16BIT
+#  define CONF_WITH_VDI_16BIT 0
+# endif
+# ifndef CONF_WITH_APOLLO_68080
+#  define CONF_WITH_APOLLO_68080 0
+# endif
+# ifndef CONF_WITH_IKBD_CLOCK
+#  define CONF_WITH_IKBD_CLOCK 0
+# endif
+# ifndef CONF_WITH_CARTRIDGE
+#  define CONF_WITH_CARTRIDGE 0
+# endif
+# ifndef CONF_WITH_IDE
+#  define CONF_WITH_IDE 1
+# endif
+# ifndef CONF_WITH_ACSI
+#  define CONF_WITH_ACSI 0
+# endif
+# ifndef CONF_WITH_SCSI
+#  define CONF_WITH_SCSI 0
+# endif
+# ifndef CONF_WITH_TT_MFP
+#  define CONF_WITH_TT_MFP 0
+# endif
+# ifndef CONF_WITH_STE_SHIFTER
+#  define CONF_WITH_STE_SHIFTER 1
+# endif
+# ifndef CONF_WITH_TT_SHIFTER
+#  define CONF_WITH_TT_SHIFTER 0
+# endif
+# ifndef CONF_WITH_VIDEL
+#  define CONF_WITH_VIDEL 0
+# endif
+# ifndef CONF_WITH_DMASOUND
+#  define CONF_WITH_DMASOUND 0
+# endif
+# ifndef CONF_WITH_XBIOS_SOUND
+#  define CONF_WITH_XBIOS_SOUND 0
+# endif
+# ifndef CONF_WITH_DSP
+#  define CONF_WITH_DSP 0
+# endif
+# ifndef CONF_WITH_YM2149
+#  define CONF_WITH_YM2149 1
+# endif
+# ifndef CONF_WITH_SCC
+#  define CONF_WITH_SCC 0
+# endif
+# ifndef CONF_WITH_BLITTER
+#  define CONF_WITH_BLITTER 0
+# endif
+# ifndef CONF_WITH_CACHE_CONTROL
+#  define CONF_WITH_CACHE_CONTROL 0
+# endif
+# ifndef CONF_WITH_MEGARTC
+#  define CONF_WITH_MEGARTC 0
+# endif
+# ifndef CONF_WITH_VME
+#  define CONF_WITH_VME 0
+# endif
+# ifndef CONF_WITH_SFP004
+#  define CONF_WITH_SFP004 0
+# endif
+# ifndef CONF_WITH_68030_PMMU
+#  define CONF_WITH_68030_PMMU 0
+# endif
+# ifndef CONF_WITH_68040_PMMU
+#  define CONF_WITH_68040_PMMU 0
+# endif
+# ifndef CONF_WITH_ICDRTC
+#  define CONF_WITH_ICDRTC 0
+# endif
+# ifndef CONF_WITH_ULTRASATAN_CLOCK
+#  define CONF_WITH_ULTRASATAN_CLOCK 0
+# endif
+# ifndef CONF_WITH_MONSTER
+#  define CONF_WITH_MONSTER 0
+# endif
+# ifndef CONF_WITH_MAGNUM
+#  define CONF_WITH_MAGNUM 0
+# endif
+# ifndef CONF_WITH_NOVA
+#  define CONF_WITH_NOVA 0
+# endif
+# ifndef CONF_WITH_FORMAT
+#  define CONF_WITH_FORMAT 0
+# endif
+# ifndef CONF_WITH_VAMPIRE_SPI
+#  define CONF_WITH_VAMPIRE_SPI 1
+# endif
+# ifndef CONF_WITH_SDMMC
+#  define CONF_WITH_SDMMC 1
+# endif
+# ifndef INITINFO_DURATION
+#  define INITINFO_DURATION 8 /* Longer time for LCD monitors startup */
+# endif
+#endif
+
+/*
  * Defaults for the FireBee target
  */
 #ifdef MACHINE_FIREBEE

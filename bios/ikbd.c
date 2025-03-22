@@ -39,6 +39,7 @@
 #include "coldfire.h"
 #include "amiga.h"
 #include "lisa.h"
+#include "v4sa.h"
 
 
 /* forward declarations */
@@ -915,7 +916,9 @@ void kbd_int(UBYTE scancode)
 /* can we send a byte to the ikbd ? */
 LONG bcostat4(void)
 {
-#if CONF_WITH_IKBD_ACIA
+#if defined(MACHINE_V4SA)
+    return -1;
+#elif CONF_WITH_IKBD_ACIA
     if (ikbd_acia.ctrl & ACIA_TDRE) {
         return -1;              /* OK */
     } else {
@@ -959,7 +962,9 @@ void ikbd_writeb(UBYTE b)
     KDEBUG(("ikbd_writeb(0x%02x)\n", (UBYTE)b));
 
     while (!bcostat4());
-#if CONF_WITH_IKBD_ACIA
+#if defined(MACHINE_V4SA)
+    v4sa_ikbd_writeb(b);
+#elif CONF_WITH_IKBD_ACIA
     ikbd_acia.data = b;
 #elif CONF_WITH_FLEXCAN
     coldfire_flexcan_ikbd_writeb(b);
@@ -980,7 +985,7 @@ void ikbd_writew(WORD w)
  */
 static UBYTE ikbd_readb(WORD timeout)
 {
-#if CONF_WITH_IKBD_ACIA
+#if CONF_WITH_IKBD_ACIA && !defined(MACHINE_V4SA)
     WORD i;
 
     /* We have to use a timeout to avoid waiting forever
