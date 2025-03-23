@@ -77,6 +77,10 @@ void v4sa_int_5(void);
 void v4sa_int_6(void);
 void v4sa_ikbd_writeb(UBYTE b);
 
+UWORD get_videl_bpp(void);
+void v4sa_setphys(const UBYTE *addr);
+const UBYTE *v4sa_physbase(void);
+
 #endif /* MACHINE_V4SA */
 
 #endif /* V4SA_H */

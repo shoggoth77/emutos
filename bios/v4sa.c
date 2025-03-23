@@ -9,6 +9,7 @@
 #include "string.h"
 #if defined(MACHINE_V4SA)
 #include "v4sa_ikbd.c"
+#include "v4sa_video.c"
 
 # define VPROXY_VECTORS ((volatile PFVOID*)0x1C0)
 # define VPROXY_NUM_VEC ((0x380 - (ULONG)VPROXY_VECTORS)>>2)

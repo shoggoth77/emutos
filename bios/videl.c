@@ -28,6 +28,7 @@
 #include "vt52.h"
 #include "xbiosbind.h"
 #include "vectors.h"
+#include "v4sa.h"
 
 #if CONF_WITH_VIDEL
 
@@ -110,8 +111,14 @@ GLOBAL LONG falcon_shadow_count;        /* real Falcon does this, used by vector
 static ULONG falcon_shadow_palette[256];
 static UWORD ste_shadow_palette[16];
 
+/*
+ * the current Falcon video mode; used by vsetmode() & vfixmode()
+ */
+WORD current_video_mode;
+
 #define MON_ALL     -1  /* code used in VMODE_ENTRY for match on mode only */
 
+#if !defined(MACHINE_V4SA)
 /*
  * tables that cover the same Falcon modes as TOS 4.04
  * note:
@@ -489,7 +496,6 @@ static WORD determine_regc0(WORD mode,WORD monitor)
     return (monitor==MON_TV)?0x0183:0x0181;
 }
 
-
 /*
  * this routine can set VIDEL to 1,2,4 or 8 bitplanes mode on VGA
  *
@@ -609,11 +615,6 @@ static int set_videl_vga(WORD mode)
 }
 
 /*
- * the current Falcon video mode; used by vsetmode() & vfixmode()
- */
-WORD current_video_mode;
-
-/*
  * Set Falcon video mode - also sets 'sshiftmod' appropriately
  */
 WORD vsetmode(WORD mode)
@@ -668,7 +669,7 @@ WORD vmontype(void)
 
     return ((*(volatile UBYTE *)0xffff8006) >> 6) & 3;
 }
-
+#endif
 /*
  * Set external video sync mode
  */
@@ -698,6 +699,7 @@ WORD vsetsync(WORD external)
     return 0; /* OK */
 }
 
+#if !defined(MACHINE_V4SA)
 /*
  * vgetsize - implements the Vgetsize() XBIOS call
  *
@@ -755,6 +757,7 @@ LONG vgetsize(WORD inmode)
 
     return (LONG)determine_width(mode) * 2 * height;
 }
+#endif
 
 /*
  * convert from Falcon palette format to STe palette format
@@ -908,6 +911,7 @@ WORD vgetrgb(WORD index,WORD count,ULONG *rgb)
     return 0; /* OK */
 }
 
+#if !defined(MACHINE_V4SA)
 /*
  * Fix Videl mode
  *
@@ -954,6 +958,14 @@ WORD monitor, currentmode;
     return mode;
 }
 
+void videl_get_current_mode_info(UWORD *planes, UWORD *hz_rez, UWORD *vt_rez)
+{
+    *planes = get_videl_bpp();
+    *hz_rez = get_videl_width();
+    *vt_rez = get_videl_height();
+}
+#endif
+
 WORD videl_check_moderez(WORD moderez)
 {
     WORD current_mode, return_mode;
@@ -964,13 +976,6 @@ WORD videl_check_moderez(WORD moderez)
     current_mode = get_videl_mode();
     return_mode = vfixmode(moderez);/* adjust */
     return (return_mode==current_mode)?0:return_mode;
-}
-
-void videl_get_current_mode_info(UWORD *planes, UWORD *hz_rez, UWORD *vt_rez)
-{
-    *planes = get_videl_bpp();
-    *hz_rez = get_videl_width();
-    *vt_rez = get_videl_height();
 }
 
 void videl_setrez(WORD rez, WORD videlmode)

@@ -150,7 +150,7 @@
 #  define CONF_WITH_FALCON_MMU 0
 # endif
 # ifndef CONF_WITH_VIDEL
-#  define CONF_WITH_VIDEL 0
+#  define CONF_WITH_VIDEL 1
 # endif
 # ifndef CONF_WITH_DSP
 #  define CONF_WITH_DSP 0

@@ -133,7 +133,9 @@ static void detect_video(void)
     KDEBUG(("has_tt_shifter = %d\n", has_tt_shifter));
 #endif
 
-#if CONF_WITH_VIDEL
+#if defined(MACHINE_V4SA)
+    has_videl = 1;
+#elif CONF_WITH_VIDEL
     /* test if we have Falcon VIDEL by testing for f030_xreg */
     has_videl = 0;
     if (check_read_byte(FALCON_HHT))

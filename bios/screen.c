@@ -37,6 +37,7 @@
 #include "amiga.h"
 #include "lisa.h"
 #include "nova.h"
+#include "v4sa.h"
 
 void detect_monitor_change(void);
 static void setphys(const UBYTE *addr);
@@ -1031,6 +1032,8 @@ const UBYTE *physbase(void)
     return amiga_physbase();
 #elif defined(MACHINE_LISA)
     return lisa_physbase();
+#elif defined(MACHINE_V4SA)
+    return v4sa_physbase();
 #elif CONF_WITH_ATARI_VIDEO
     return atari_physbase();
 #else
@@ -1049,6 +1052,8 @@ static void setphys(const UBYTE *addr)
     amiga_setphys(addr);
 #elif defined(MACHINE_LISA)
     lisa_setphys(addr);
+#elif defined(MACHINE_V4SA)
+    v4sa_setphys(addr);
 #elif CONF_WITH_ATARI_VIDEO
     atari_setphys(addr);
 #endif
